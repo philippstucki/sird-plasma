@@ -20,20 +20,20 @@ c.style.display = 'block';
 w = c.width = innerWidth = 600;
 h = c.height = innerHeight = 600;
 
+// create initial black background
 a.fillStyle = 'black';
 a.fillRect(0, 0, w, h);
 
+// draw object
 rg = a.createRadialGradient(w/2, h/2, 30, w/2, h/2, 100);
 rg.addColorStop(0, 'rgb(20,20,20)');
 rg.addColorStop(1, 'black');
 a.fillStyle = rg;
 a.fillRect(0, 0, w, h);
 
-//a.fillStyle = 'rgb(25,25,25)';
-//a.fillRect(100, 100, w-200, h-200);
-
-randW = 70;
-randH = 70;
+// create random pattern
+randW = 170;
+randH = randW;
 randData = a.createImageData(randW, randH);
 
 for (i=0; i<=randW*randH-1; i++) {
@@ -45,10 +45,13 @@ for (i=0; i<=randW*randH-1; i++) {
     randData.data[bi+3] = 255;
 }
 
+// read height map into typed array
 scr = a.getImageData(0, 0, w, h);
 
+// run absird algorithm
 for (y = 0; y <= h-1; y++) {
     for (x = w-1; x > w-randW; x--) {
+
         scrpos = (y*w+x)*4;
         scrv = scr.data.subarray(scrpos, scrpos+4)
 
@@ -70,6 +73,7 @@ for (y = 0; y <= h-1; y++) {
 
 }
 
+// write rendered frame back to canvas
 a.putImageData(scr, 0, 0);
 
 
