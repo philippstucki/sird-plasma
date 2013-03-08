@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+	<head>
+		<title>JS1k, 1k demo submission [ID]</title>
+		<meta charset="utf-8" />
+	</head>
+	<body>
+		<canvas id="c"></canvas>
+		<script>
+			var b = document.body;
+			var c = document.getElementsByTagName('canvas')[0];
+			var a = c.getContext('2d');
+			document.body.clientWidth; // fix bug in webkit: http://qfox.nl/weblog/218
+		</script>
+		<script>
+// start of submission //
+
+b.style.margin = 0;
+c.style.display = 'block';
+w = c.width = innerWidth = 600;
+h = c.height = innerHeight = 600;
+
+a.fillStyle = 'black';
+a.fillRect(0, 0, w, h);
+
+rg = a.createRadialGradient(w/2, h/2, 30, w/2, h/2, 100);
+rg.addColorStop(0, 'rgb(20,20,20)');
+rg.addColorStop(1, 'black');
+a.fillStyle = rg;
+a.fillRect(0, 0, w, h);
+
+//a.fillStyle = 'rgb(25,25,25)';
+//a.fillRect(100, 100, w-200, h-200);
+
+randW = 70;
+randH = 70;
+randData = a.createImageData(randW, randH);
+
+for (i=0; i<=randW*randH-1; i++) {
+    v = Math.random()*255;
+    bi = i*4;
+    randData.data[bi] =   v;
+    randData.data[bi+1] = v;
+    randData.data[bi+2] = v;
+    randData.data[bi+3] = 255;
+}
+
+scr = a.getImageData(0, 0, w, h);
+
+for (y = 0; y <= h-1; y++) {
+    for (x = w-1; x > w-randW; x--) {
+        scrpos = (y*w+x)*4;
+        scrv = scr.data.subarray(scrpos, scrpos+4)
+
+        randxpos = (x - scrv[0])%randW;
+        randypos = y%randH;
+        randpos = 4*(randypos*randW+randxpos)
+        randv = randData.data.subarray(randpos, randpos+4)
+
+        scr.data.set(randv, scrpos);
+    }
+
+    for (x=w-randW; x>=0; x--) {
+        scrpos = (y*w+x)*4;
+        scrv = scr.data.subarray(scrpos, scrpos+4)
+        scrrpos = (y*w+x-1+randW-scrv[0])*4
+        scrv = scr.data.subarray(scrrpos, scrrpos+4);
+        scr.data.set(scrv, scrpos)
+    }
+
+}
+
+a.putImageData(scr, 0, 0);
+
+
+// end of submission //
+		</script>
+	</body>
+</html>
