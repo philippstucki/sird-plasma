@@ -18,7 +18,8 @@
 
 
 
-var PI, w,h,randW, randH, scr, scrData32, fps, t, st, sint, sintl, shm=-1, run=1;
+
+var PI, w,h,randW, randH, scr, scrData32, fps, t, st, shm=-1, run=1;
 
 b.style.margin = 0;
 b.style.background = 'black';
@@ -38,14 +39,6 @@ randW = randH = 150;
 
 PI = Math.PI;
 
-sintl = 10000;
-sintl_8 = sintl/8;
-sint = new Float32Array(sintl);
-for (i=0; i<sintl; i++) {
-    sint[i] = Math.sin(2*PI/sintl*i);
-}
-
-
 randData = new Uint32Array(randW*randH);
 for (i=0; i<=randW*randH-1; i++) {
     rv = Math.floor(Math.random()*0xCF);
@@ -58,7 +51,7 @@ scr = a.getImageData(0, 0, w, h);
 scrData32 = new Uint32Array(scr.data.buffer);
 
 render = function(t, fps) {
-    var rt, u, scrpos, randxpos, randypos, randv, scrv, scrrpos, rx, ry, fxy, xmod, ymod;
+    var rt, u, scrpos, randxpos, randypos, randv, scrv, scrrpos, rx, ry, fxy, xmod, ymod, ct, m;
     rt = randData[t%randData.length];
     u = Math.sin(t/30);
 
@@ -81,18 +74,17 @@ render = function(t, fps) {
 
             scrpos = y*w+x;
 
-            rx = Math.floor(sintl*x/w);
-            ry = Math.floor(sintl*y/h);
+            m = 3;
+            rx = m*PI*x/w;
+            ry = m/2*PI*y/h;
+            ct=t/30;
 
-            modf = (t/60);
-            xmod = Math.floor((Math.sin(modf+y/200)+1)*PI*w );
-            ymod = Math.floor((Math.sin(modf+x/400)+1)*PI*w);
+            fxy = Math.sin(rx+ct);
+            fxy += Math.cos(ry+ct);
+            fxy += Math.sin(3*(rx*Math.sin(ct/6)+ry*Math.cos(ct/4))+ct);
 
-            //xmod = sint[(modf+(y>>8))%sintl];
-            //xmod = Math.floor((sint[(modf+(y>>8))%sintl]+1)*PI*w);
-            //ymod = Math.floor(sint[()%sintl]);
-
-            fxy = ( sint[(rx+xmod)%sintl]*sint[(ry+ymod+sintl_8)%sintl]*u + 1)/2;
+            fxy = (fxy+3)/6;
+            fxy = fxy<0.4?0:fxy;
 
             scrv = Math.floor(fxy*randW/3);
 
@@ -133,12 +125,6 @@ document.addEventListener('keydown', function(e) {
     run = e.keyCode==32 ? run*-1 : run*1;
     shm = e.keyCode==72 ? shm*-1 : shm*1;
 });
-
-document.addEventListener('click', function(e) {
-    run*=-1;
-});
-
-
 
 
 
