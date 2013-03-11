@@ -15,25 +15,41 @@
 		<script>
 // start of submission //
 
+
+
+
+var PI, w,h,randW, randH, scr, scrData32, fps, t, st, sint, sintl, shm=-1, run=1;
+
 b.style.margin = 0;
 b.style.background = 'black';
 c.style.display = 'block';
 c.style.margin = '0 auto';
-w = c.width = 800;
-h = c.height = 600;
+w = c.width = Math.min(innerWidth, 1000);
+h = c.height = Math.min(Math.floor(innerHeight/5)*5, 600);
 
 // create initial black background
-a.font = 'bold 16px arial';
+a.font = 'bold 10px arial';
 a.fillStyle = 'black';
 a.fillRect(0, 0, w, h);
+a.fillStyle = 'white';
 
 // create random pattern
-randW = 180;
-randH = 180;
+randW = randH = 150;
+
+PI = Math.PI;
+
+sintl = 10000;
+sintl_8 = sintl/8;
+sint = new Float32Array(sintl);
+for (i=0; i<sintl; i++) {
+    sint[i] = Math.sin(2*PI/sintl*i);
+}
+
 
 randData = new Uint32Array(randW*randH);
 for (i=0; i<=randW*randH-1; i++) {
-    v = Math.floor(Math.random()*0xFFFFFFFF)|0xFF000000;
+    rv = Math.floor(Math.random()*0xCF);
+    v = 0xFF300030 |(rv<<8);
     randData[i] = v;
 }
 
@@ -41,60 +57,89 @@ for (i=0; i<=randW*randH-1; i++) {
 scr = a.getImageData(0, 0, w, h);
 scrData32 = new Uint32Array(scr.data.buffer);
 
-PI = Math.PI;
-
-render = function(t) {
+render = function(t, fps) {
+    var rt, u, scrpos, randxpos, randypos, randv, scrv, scrrpos, rx, ry, fxy, xmod, ymod;
     rt = randData[t%randData.length];
-    u = Math.sin(t/10);
+    u = Math.sin(t/30);
 
-    for (y = 0; y < h; y+=2) {
+    for (y = 0; y < h; y+=5) {
         for (x = 0; x<randW; x++) {
-
             scrpos = y*w+x;
-
             randxpos = x%randW;
             randypos = y%randH;
             randpos = (randypos*randW + randxpos + rt)%randData.length;
             randv = randData[randpos];
 
-            scrData32[scrpos]=randv;
+            if (shm==1) {
+                scrData32[scrpos]=0xFF000000;
+            } else {
+                scrData32[scrpos]=randv;
+            }
         }
 
         for (x=randW; x<w; x++) {
 
             scrpos = y*w+x;
 
-            rx = 3*PI*x/w;
-            ry = 2*PI*y/h;
-            fxy = (Math.sin(rx)*Math.cos(ry)*u+1)/2;
-            scrv = Math.floor(fxy*40)
+            rx = Math.floor(sintl*x/w);
+            ry = Math.floor(sintl*y/h);
+
+            modf = (t/60);
+            xmod = Math.floor((Math.sin(modf+y/200)+1)*PI*w );
+            ymod = Math.floor((Math.sin(modf+x/400)+1)*PI*w);
+
+            //xmod = sint[(modf+(y>>8))%sintl];
+            //xmod = Math.floor((sint[(modf+(y>>8))%sintl]+1)*PI*w);
+            //ymod = Math.floor(sint[()%sintl]);
+
+            fxy = ( sint[(rx+xmod)%sintl]*sint[(ry+ymod+sintl_8)%sintl]*u + 1)/2;
+
+            scrv = Math.floor(fxy*randW/3);
 
             scrrpos = (scrpos-randW+scrv);
-
-            scrData32[scrpos] = scrData32[scrrpos];
+            if(shm==1) {
+                scrData32[scrpos] = 0xFF000000|(scrv/randW*3*255);
+            } else {
+                scrData32[scrpos] = scrData32[scrrpos]; 
+            }
         }
+
+        l = scrData32.subarray(y*w, y*w+w);
+        scrData32.set(l, (y+1)*w);
+        scrData32.set(l, (y+2)*w);
+        scrData32.set(l, (y+3)*w);
 
     }
     // write rendered frame back to canvas
     a.putImageData(scr, 0, 0);
-    a.fillText('PHST/13', w-70, h-4);
+    a.fillText('PHST/13 '+fps.toFixed(2)+' f/s', w-100, h-4);
 }
 
-var t = 0;
+t = fps = 0;
+st = new Date().getTime();
+
 i = setInterval(function() {
-    render(t++);
-}, 55);
+    if (run==1) {
+        render(t++, fps);
+        fps = Math.round(10*(t*1E3/(new Date().getTime() - st)))/10;
+    }
+}, 40);
 
 function stop() {
     window.clearInterval(i);
 }
 
 document.addEventListener('keydown', function(e) {
-    [13,27,32].indexOf(e.keyCode) && stop();
+    run = e.keyCode==32 ? run*-1 : run*1;
+    shm = e.keyCode==72 ? shm*-1 : shm*1;
 });
+
 document.addEventListener('click', function(e) {
-    stop();
+    run*=-1;
 });
+
+
+
 
 
 
