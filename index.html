@@ -16,27 +16,21 @@
 // start of submission //
 
 b.style.margin = 0;
+b.style.background = 'black';
 c.style.display = 'block';
-w = c.width = innerWidth;
-h = c.height = innerHeight;
+c.style.margin = '0 auto';
+w = c.width = 800;
+h = c.height = 600;
 
 // create initial black background
+a.font = 'bold 16px arial';
 a.fillStyle = 'black';
 a.fillRect(0, 0, w, h);
 
-// draw object
-rg = a.createRadialGradient(w/2, h/2, 30, w/2, h/2, 100);
-rg.addColorStop(0, 'rgb(40,40,40)');
-rg.addColorStop(1, 'black');
-a.fillStyle = rg;
-//a.fillStyle = 'red';
-a.fillRect(0, 0, w, h);
-
 // create random pattern
-randW = 150;
-randH = randW;
+randW = 180;
+randH = 180;
 
-console.log('generating random data');
 randData = new Uint32Array(randW*randH);
 for (i=0; i<=randW*randH-1; i++) {
     v = Math.floor(Math.random()*0xFFFFFFFF)|0xFF000000;
@@ -46,39 +40,62 @@ for (i=0; i<=randW*randH-1; i++) {
 // read height map into typed array
 scr = a.getImageData(0, 0, w, h);
 scrData32 = new Uint32Array(scr.data.buffer);
-scrData8 = new Uint8Array(scr.data.buffer);
 
-console.log('start absird');
-// run absird algorithm
-for (y = 0; y <= h-1; y++) {
-    for (x = w-1; x > w-randW; x--) {
+PI = Math.PI;
 
-        scrpos = y*w+x;
-        scrv = scrData32[scrpos]&0xFF;
+render = function(t) {
+    rt = randData[t%randData.length];
+    u = Math.sin(t/10);
 
-        randxpos = (x - scrv)%randW;
-        randypos = y%randH;
-        randpos = (randypos*randW+randxpos)
-        randv = randData[randpos];
+    for (y = 0; y < h; y+=2) {
+        for (x = 0; x<randW; x++) {
 
-        scrData32[scrpos]=randv;
+            scrpos = y*w+x;
+
+            randxpos = x%randW;
+            randypos = y%randH;
+            randpos = (randypos*randW + randxpos + rt)%randData.length;
+            randv = randData[randpos];
+
+            scrData32[scrpos]=randv;
+        }
+
+        for (x=randW; x<w; x++) {
+
+            scrpos = y*w+x;
+
+            rx = 3*PI*x/w;
+            ry = 2*PI*y/h;
+            fxy = (Math.sin(rx)*Math.cos(ry)*u+1)/2;
+            scrv = Math.floor(fxy*40)
+
+            scrrpos = (scrpos-randW+scrv);
+
+            scrData32[scrpos] = scrData32[scrrpos];
+        }
+
     }
-
-    for (x=w-randW; x>=0; x--) {
-        scrpos = y*w+x;
-        scrv = scrData32[scrpos]&0xFF;
-
-        scrrpos = (y*w+x-2+randW-scrv);
-
-        scrData32[scrpos] = scrData32[scrrpos];
-    }
-
+    // write rendered frame back to canvas
+    a.putImageData(scr, 0, 0);
+    a.fillText('PHST/13', w-70, h-4);
 }
-console.log('end absird');
-// run absird algorithm
 
-// write rendered frame back to canvas
-a.putImageData(scr, 0, 0);
+var t = 0;
+i = setInterval(function() {
+    render(t++);
+}, 55);
+
+function stop() {
+    window.clearInterval(i);
+}
+
+document.addEventListener('keydown', function(e) {
+    [13,27,32].indexOf(e.keyCode) && stop();
+});
+document.addEventListener('click', function(e) {
+    stop();
+});
+
 
 
 // end of submission //
