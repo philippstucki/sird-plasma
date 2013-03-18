@@ -26,7 +26,7 @@ b.style.background = 'black';
 c.style.display = 'block';
 c.style.margin = 'auto';
 w = c.width = Math.min(innerWidth, 1000);
-h = c.height = Math.min(Math.floor(innerHeight/5)*5, 600);
+h = c.height = Math.min(((innerHeight/5)|0)*5, 600);
 
 // create initial black background
 a.font = 'bold 10px arial';
@@ -41,7 +41,7 @@ PI = Math.PI;
 
 randData = new Uint32Array(randW*randH);
 for (i=0; i<=randW*randH-1; i++) {
-    rv = Math.floor(Math.random()*0xCF);
+    rv = Math.random()*0xCF|0;
     v = 0xFF300030 |(rv<<8);
     randData[i] = v;
 }
@@ -86,7 +86,7 @@ render = function(t, fps) {
             fxy = (fxy+3)/6;
             fxy = fxy<0.4?0:fxy;
 
-            scrv = Math.floor(fxy*randW/3);
+            scrv = (fxy*randW/3)|0;
 
             scrrpos = (scrpos-randW+scrv);
             if(shm==1) {
@@ -115,7 +115,7 @@ i = setInterval(function() {
         render(t++, fps);
         fps = Math.round(10*(t*1E3/(new Date().getTime() - st)))/10;
     }
-}, 40);
+}, 20);
 
 function stop() {
     window.clearInterval(i);
