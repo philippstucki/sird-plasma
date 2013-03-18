@@ -39,6 +39,8 @@ randW = randH = 150;
 
 PI = Math.PI;
 
+// create random data of randW * randH size
+// color value satisfies 0 < v < 0xCF
 randData = new Uint32Array(randW*randH);
 for (i=0; i<=randW*randH-1; i++) {
     rv = Math.random()*0xCF|0;
