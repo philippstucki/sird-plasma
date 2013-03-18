@@ -1,6 +1,17 @@
 // make jslint stop after the first error so we can do all sort of nasty tricks
 /*jslint passfail: true*/
 
+
+// shim layer with setTimeout fallback
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          function( callback ){
+            window.setTimeout(callback, 1000 / 60);
+          };
+})();
+
 // declare global vars to enable shortening by google closure compiler
 var PI, w,h,randW, randH, scr, scrData32, fps, t, st, shm=-1, run=1;
 
@@ -128,18 +139,17 @@ render = function(t, fps) {
 t = fps = 0;
 st = new Date().getTime();
 
-i = setInterval(function() {
-    // only render when running
-    if (run==1) {
-        render(t++, fps);
-        fps = Math.round(10*(t*1E3/(new Date().getTime() - st)))/10;
-    }
-}, 20);
-
 // add event listener to bind function keys
 document.addEventListener('keydown', function(e) {
     run = e.keyCode==32 ? run*-1 : run*1;
     shm = e.keyCode==72 ? shm*-1 : shm*1;
 });
 
-/*jsl:end*/
+(function loop() {
+    requestAnimFrame(loop);
+    // only render when running
+    if (run==1) {
+        render(t++, fps);
+        fps = Math.round(10*(t*1E3/(new Date().getTime() - st)))/10;
+    }
+})();
